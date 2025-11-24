@@ -7,11 +7,15 @@ namespace console_1
         static void Main()
         {
             Console.Write("Введите размер матрицы: ");
-            int n = Convert.ToInt32(Console.ReadLine());
+            if (!int.TryParse(Console.ReadLine(), out int n) || n <= 0)
+            {
+                Console.WriteLine("Неверный размер.");
+                return;
+            }
 
             int[,] matrix = new int[n, n];
 
-            // Заполнение матрицы значениями 1..N*N
+            // Заполнение матрицы значениями 1..N*N (исходная, хотя мы потом её перестраиваем)
             int value = 1;
             for (int i = 0; i < n; i++)
                 for (int j = 0; j < n; j++)
@@ -25,12 +29,20 @@ namespace console_1
             Console.WriteLine("2 — Верхний правый");
             Console.WriteLine("3 — Нижний правый");
             Console.WriteLine("4 — Нижний левый");
-            int corner = Convert.ToInt32(Console.ReadLine());
+            if (!int.TryParse(Console.ReadLine(), out int corner) || corner < 1 || corner > 4)
+            {
+                Console.WriteLine("Неправильный выбор угла.");
+                return;
+            }
 
             Console.WriteLine("\nВыберите направление заполнения:");
             Console.WriteLine("1 — По часовой стрелке");
             Console.WriteLine("2 — Против часовой стрелки");
-            int direction = Convert.ToInt32(Console.ReadLine());
+            if (!int.TryParse(Console.ReadLine(), out int direction) || (direction != 1 && direction != 2))
+            {
+                Console.WriteLine("Неправильный выбор направления.");
+                return;
+            }
 
             int[,] spiral = BuildSpiral(matrix, corner, direction);
 
@@ -38,83 +50,93 @@ namespace console_1
             PrintMatrix(spiral);
         }
 
+        // Построение спирали: надёжный симулятивный метод (движение + поворот при необходимости)
         static int[,] BuildSpiral(int[,] original, int startCorner, int direction)
         {
             int n = original.GetLength(0);
             int[,] result = new int[n, n];
 
-            // Плоский массив
+            // Плоский массив значений, которые нужно разместить в спирали
             int[] flat = new int[n * n];
-            int idx = 0;
+            int idxFlat = 0;
             for (int i = 0; i < n; i++)
                 for (int j = 0; j < n; j++)
-                    flat[idx++] = original[i, j];
+                    flat[idxFlat++] = original[i, j];
 
-            int top = 0, bottom = n - 1, left = 0, right = n - 1;
-            idx = 0;
+            // visited для контроля границ/занятых ячеек
+            bool[,] visited = new bool[n, n];
 
-            // смещение выбора угла (0–3)
-            int cornerShift = startCorner switch
+            // начальная позиция в зависимости от выбранного угла
+            int r = 0, c = 0;
+            switch (startCorner)
             {
-                1 => 0, // верхний левый
-                2 => 1, // верхний правый
-                3 => 2, // нижний правый
-                4 => 3, // нижний левый
-                _ => 0
-            };
+                case 1: // верхний левый
+                    r = 0; c = 0;
+                    break;
+                case 2: // верхний правый
+                    r = 0; c = n - 1;
+                    break;
+                case 3: // нижний правый
+                    r = n - 1; c = n - 1;
+                    break;
+                case 4: // нижний левый
+                    r = n - 1; c = 0;
+                    break;
+            }
 
-            // направления
-            // 0 →  (слева направо)
-            // 1 ↓  (сверху вниз)
-            // 2 ←  (справа налево)
-            // 3 ↑  (снизу вверх)
-            int[] cw =  { 0, 1, 2, 3 }; // по часовой
-            int[] ccw = { 1, 0, 3, 2 }; // против часовой
-
-            int[] dirs = direction == 1 ? cw : ccw;
-
-            while (top <= bottom && left <= right)
+            // начальная дирекция (dr, dc)
+            // для по часовой (CW) нач.направления:
+            // UL -> →, UR -> ↓, BR -> ←, BL -> ↑
+            // для против часовой (CCW) нач.направления:
+            // UL -> ↓, UR -> ←, BR -> ↑, BL -> →
+            int dr = 0, dc = 0;
+            if (direction == 1) // CW
             {
-                for (int k = 0; k < 4; k++)
+                switch (startCorner)
                 {
-                    int dir =
-                        direction == 1
-                        ? dirs[(k + cornerShift) % 4]          // по часовой
-                        : dirs[(k - cornerShift + 4) % 4];     // против часовой — фикс
-
-                    switch (dir)
-                    {
-                        case 0: // →
-                            for (int j = left; j <= right; j++)
-                                result[top, j] = flat[idx++];
-                            top++;
-                            break;
-
-                        case 1: // ↓
-                            for (int i = top; i <= bottom; i++)
-                                result[i, right] = flat[idx++];
-                            right--;
-                            break;
-
-                        case 2: // ←
-                            if (top <= bottom)
-                            {
-                                for (int j = right; j >= left; j--)
-                                    result[bottom, j] = flat[idx++];
-                                bottom--;
-                            }
-                            break;
-
-                        case 3: // ↑
-                            if (left <= right)
-                            {
-                                for (int i = bottom; i >= top; i--)
-                                    result[i, left] = flat[idx++];
-                                left++;
-                            }
-                            break;
-                    }
+                    case 1: dr = 0; dc = 1; break;  // →
+                    case 2: dr = 1; dc = 0; break;  // ↓
+                    case 3: dr = 0; dc = -1; break; // ←
+                    case 4: dr = -1; dc = 0; break; // ↑
                 }
+            }
+            else // CCW
+            {
+                switch (startCorner)
+                {
+                    case 1: dr = 1; dc = 0; break;  // ↓
+                    case 2: dr = 0; dc = -1; break; // ←
+                    case 3: dr = -1; dc = 0; break; // ↑
+                    case 4: dr = 0; dc = 1; break;  // →
+                }
+            }
+
+            // функции поворота:
+            // для CW поворот "вправо": (dr,dc) -> (dc, -dr)
+            // для CCW поворот "влево":  (dr,dc) -> (-dc, dr)
+            Func<(int, int), (int, int)> turn = direction == 1
+                ? new Func<(int, int), (int, int)>(d => (d.Item2, -d.Item1))   // вправо
+                : new Func<(int, int), (int, int)>(d => (-d.Item2, d.Item1));  // влево
+
+            int fillIdx = 0;
+            for (int steps = 0; steps < n * n; steps++)
+            {
+                result[r, c] = flat[fillIdx++];
+                visited[r, c] = true;
+
+                int nr = r + dr;
+                int nc = c + dc;
+
+                // если следующий шаг выходит за границы или уже занят — поворачиваем
+                if (nr < 0 || nr >= n || nc < 0 || nc >= n || visited[nr, nc])
+                {
+                    (dr, dc) = turn((dr, dc));
+                    nr = r + dr;
+                    nc = c + dc;
+                }
+
+                r = nr;
+                c = nc;
             }
 
             return result;
