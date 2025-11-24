@@ -1,0 +1,57 @@
+using System;
+namespace console_1
+{
+    class Program
+    {
+        static void Main()
+        {
+            Console.WriteLine("Введите размер матрицы:");
+            int x = Convert.ToInt32(Console.ReadLine());
+            int[,] a = new int[x, x];
+            
+            Console.WriteLine("\nИсходная матрица:\n");
+            PrintMatrix(a);
+            int[,] spiral = new int[x, x];
+            int top = 0, bottom = x - 1, left = 0, right = x - 1;
+            int index = 0;
+            int[] flat = new int[x * x];
+            for (int i = 0; i < x; i++)
+                for (int j = 0; j < x; j++)
+                    flat[index++] = a[i, j];
+            index = 0;
+            while (top <= bottom && left <= right)
+            {
+                for (int j = left; j <= right; j++)
+                    spiral[top, j] = flat[index++];
+                top++;
+                for (int i = top; i <= bottom; i++)
+                    spiral[i, right] = flat[index++];
+                right--;
+                if (top <= bottom)
+                {
+                    for (int j = right; j >= left; j--)
+                        spiral[bottom, j] = flat[index++];
+                    bottom--;
+                }
+                if (left <= right)
+                {
+                    for (int i = bottom; i >= top; i--)
+                        spiral[i, left] = flat[index++];
+                    left++;
+                }
+            }
+            Console.WriteLine("\nСпиральная матрица:\n");
+            PrintMatrix(spiral);
+        }
+        static void PrintMatrix(int[,] m)
+        {
+            int n = m.GetLength(0);
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                    Console.Write(m[i, j] + " ");
+                Console.WriteLine();
+            }
+        }
+    }
+}
