@@ -11,7 +11,7 @@ namespace console_1
 
             int[,] matrix = new int[n, n];
 
-            // Заполнение 1..N*N
+            // Заполнение матрицы значениями 1..N*N
             int value = 1;
             for (int i = 0; i < n; i++)
                 for (int j = 0; j < n; j++)
@@ -38,7 +38,6 @@ namespace console_1
             PrintMatrix(spiral);
         }
 
-        // Строим спираль
         static int[,] BuildSpiral(int[,] original, int startCorner, int direction)
         {
             int n = original.GetLength(0);
@@ -54,7 +53,7 @@ namespace console_1
             int top = 0, bottom = n - 1, left = 0, right = n - 1;
             idx = 0;
 
-            // смещение угла (0–3)
+            // смещение выбора угла (0–3)
             int cornerShift = startCorner switch
             {
                 1 => 0, // верхний левый
@@ -64,13 +63,13 @@ namespace console_1
                 _ => 0
             };
 
-            // порядок движений:
-            // 0 — → (слева направо)
-            // 1 — ↓ (сверху вниз)
-            // 2 — ← (справа налево)
-            // 3 — ↑ (снизу вверх)
-            int[] cw = { 0, 1, 2, 3 };      // по часовой
-            int[] ccw = { 1, 0, 3, 2 };     // против часовой
+            // направления
+            // 0 →  (слева направо)
+            // 1 ↓  (сверху вниз)
+            // 2 ←  (справа налево)
+            // 3 ↑  (снизу вверх)
+            int[] cw =  { 0, 1, 2, 3 }; // по часовой
+            int[] ccw = { 1, 0, 3, 2 }; // против часовой
 
             int[] dirs = direction == 1 ? cw : ccw;
 
@@ -78,7 +77,10 @@ namespace console_1
             {
                 for (int k = 0; k < 4; k++)
                 {
-                    int dir = dirs[(k + cornerShift) % 4];
+                    int dir =
+                        direction == 1
+                        ? dirs[(k + cornerShift) % 4]          // по часовой
+                        : dirs[(k - cornerShift + 4) % 4];     // против часовой — фикс
 
                     switch (dir)
                     {
@@ -130,10 +132,3 @@ namespace console_1
         }
     }
 }
-
-
-  6   7   8   9   1
- 13  20  21  17   2
- 12  23  25  18   3
- 11  22  24  19   4
- 10  16  15  14   5
