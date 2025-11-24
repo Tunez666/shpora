@@ -1,55 +1,122 @@
 using System;
+
 namespace console_1
 {
     class Program
     {
         static void Main()
         {
-            Console.WriteLine("Введите размер матрицы:");
-            int x = Convert.ToInt32(Console.ReadLine());
-            int[,] a = new int[x, x];
-            
+            Console.Write("Введите размер матрицы: ");
+            int n = Convert.ToInt32(Console.ReadLine());
+
+            int[,] matrix = new int[n, n];
+
+            // Заполняем матрицу числами от 1 до N*N
+            int value = 1;
+            for (int i = 0; i < n; i++)
+                for (int j = 0; j < n; j++)
+                    matrix[i, j] = value++;
+
             Console.WriteLine("\nИсходная матрица:\n");
-            PrintMatrix(a);
-            int[,] spiral = new int[x, x];
-            int top = 0, bottom = x - 1, left = 0, right = x - 1;
-            int index = 0;
-            int[] flat = new int[x * x];
-            for (int i = 0; i < x; i++)
-                for (int j = 0; j < x; j++)
-                    flat[index++] = a[i, j];
-            index = 0;
-            while (top <= bottom && left <= right)
-            {
-                for (int j = left; j <= right; j++)
-                    spiral[top, j] = flat[index++];
-                top++;
-                for (int i = top; i <= bottom; i++)
-                    spiral[i, right] = flat[index++];
-                right--;
-                if (top <= bottom)
-                {
-                    for (int j = right; j >= left; j--)
-                        spiral[bottom, j] = flat[index++];
-                    bottom--;
-                }
-                if (left <= right)
-                {
-                    for (int i = bottom; i >= top; i--)
-                        spiral[i, left] = flat[index++];
-                    left++;
-                }
-            }
+            PrintMatrix(matrix);
+
+            Console.WriteLine("\nВыберите угол, с которого начнётся спираль:");
+            Console.WriteLine("1 — Верхний левый");
+            Console.WriteLine("2 — Верхний правый");
+            Console.WriteLine("3 — Нижний правый");
+            Console.WriteLine("4 — Нижний левый");
+
+            int choice = Convert.ToInt32(Console.ReadLine());
+
+            int[,] spiral = BuildSpiral(matrix, choice);
+
             Console.WriteLine("\nСпиральная матрица:\n");
             PrintMatrix(spiral);
         }
+
+        // Функция построения спирали
+        static int[,] BuildSpiral(int[,] original, int startCorner)
+        {
+            int n = original.GetLength(0);
+            int[,] result = new int[n, n];
+
+            // Выравниваем в плоский массив
+            int[] flat = new int[n * n];
+            int idx = 0;
+            for (int i = 0; i < n; i++)
+                for (int j = 0; j < n; j++)
+                    flat[idx++] = original[i, j];
+
+            int top = 0, bottom = n - 1, left = 0, right = n - 1;
+            idx = 0;
+
+            // смещения в зависимости от выбранного угла
+            int rotation = startCorner switch
+            {
+                1 => 0,  // верхний левый — как у тебя было
+                2 => 1,  // верхний правый
+                3 => 2,  // нижний правый
+                4 => 3,  // нижний левый
+                _ => 0
+            };
+
+            // Основной цикл: идём по слоям
+            while (top <= bottom && left <= right)
+            {
+                // 0 — слева-направо
+                // 1 — сверху-вниз
+                // 2 — справа-налево
+                // 3 — снизу-вверх
+
+                for (int k = 0; k < 4; k++)
+                {
+                    int dir = (k + rotation) % 4;
+
+                    switch (dir)
+                    {
+                        case 0: // слева направо
+                            for (int j = left; j <= right; j++)
+                                result[top, j] = flat[idx++];
+                            top++;
+                            break;
+
+                        case 1: // сверху вниз
+                            for (int i = top; i <= bottom; i++)
+                                result[i, right] = flat[idx++];
+                            right--;
+                            break;
+
+                        case 2: // справа налево
+                            if (top <= bottom)
+                            {
+                                for (int j = right; j >= left; j--)
+                                    result[bottom, j] = flat[idx++];
+                                bottom--;
+                            }
+                            break;
+
+                        case 3: // снизу вверх
+                            if (left <= right)
+                            {
+                                for (int i = bottom; i >= top; i--)
+                                    result[i, left] = flat[idx++];
+                                left++;
+                            }
+                            break;
+                    }
+                }
+            }
+
+            return result;
+        }
+
         static void PrintMatrix(int[,] m)
         {
             int n = m.GetLength(0);
             for (int i = 0; i < n; i++)
             {
                 for (int j = 0; j < n; j++)
-                    Console.Write(m[i, j] + " ");
+                    Console.Write(m[i, j].ToString().PadLeft(3) + " ");
                 Console.WriteLine();
             }
         }
