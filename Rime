@@ -1,0 +1,44 @@
+using System;
+
+class Program
+{
+    static void Main()
+    {
+        Console.Write("Введите число: ");
+        if (int.TryParse(Console.ReadLine(), out int number))
+        {
+            if (number <= 0 || number > 3999)
+            {
+                Console.WriteLine("Введите число от 1 до 3999.");
+                return;
+            }
+
+            string roman = ToRoman(number);
+            Console.WriteLine($"Римское число: {roman}");
+        }
+        else
+        {
+            Console.WriteLine("Ошибка ввода!");
+        }
+    }
+
+    static string ToRoman(int number)
+    {
+        // соответствия арабских и римских чисел
+        int[] values =    {1000, 900, 500, 400, 100, 90,  50,  40,  10,  9,   5,   4,   1};
+        string[] symbols ={"M",  "CM","D", "CD","C","XC","L","XL","X","IX","V","IV","I"};
+
+        string result = "";
+
+        for (int i = 0; i < values.Length; i++)
+        {
+            while (number >= values[i])
+            {
+                result += symbols[i];
+                number -= values[i];
+            }
+        }
+
+        return result;
+    }
+}
