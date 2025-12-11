@@ -1,0 +1,115 @@
+using System;
+
+namespace console_1
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            int num;
+            int chis;
+
+            Console.WriteLine("Число которое нужно перевести: ");
+            num = Convert.ToInt32(Console.ReadLine());
+
+            Console.WriteLine("Выберите систему счисления: " +
+                "2 - двоичная; " +
+                "3 - тернарная; " +
+                "4-7 - прочие; " +
+                "8 - восьмеричная; " +
+                "10 - десятичная; " +
+                "16 - шестнадцатиричная");
+
+            chis = Convert.ToInt32(Console.ReadLine());
+
+            switch (chis)
+            {
+                case 2:
+                    Console.WriteLine("В двоичной системе: " + Convert.ToString(num, 2));
+                    break;
+                case 3:
+                case 4:
+                case 5:
+                case 6:
+                case 7:
+                    // Вызов твоего метода
+                    string res = ostalnaye(num, chis);
+                    Console.WriteLine("Результат: " + res);
+                    break;
+                case 8:
+                    Console.WriteLine("В восьмеричной системе: " + Convert.ToString(num, 8));
+                    break;
+                case 10:
+                    Console.WriteLine("В десятичной системе: " + Convert.ToString(num, 10));
+                    break;
+                case 16:
+                    Console.WriteLine("В шестнадцатеричной системе: " + Convert.ToString(num, 16));
+                    break;
+            }
+
+            Console.ReadLine();
+        }
+
+        // *** ТВОЙ АЛГОРИТМ, НЕ ПЕРЕПИСЫВАЮ ***
+        static string ostalnaye(int num, int chis)
+        {
+            string result = "";
+            int ch = num;
+            int ost;
+            int x2 = num;
+
+            int[] values = { 10, 11, 12, 13, 14, 15, 16, 17, 18, 19 };
+            string[] values2 = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J" };
+
+            do
+            {
+                ch = ch / chis;  // ← исправлено: раньше было /3
+                ost = x2 - (ch * chis); // твой метод — оставляю
+                x2 = ch;
+
+                if (ost >= 10)
+                {
+                    for (int i = 0; i < values.Length; i++)
+                    {
+                        if (ost == values[i])
+                        {
+                            result += values2[i];
+                        }
+                    }
+                }
+                else
+                {
+                    result += ost.ToString();
+                }
+
+                Console.WriteLine("деление " + ch + " остаток " + ost);
+
+            } while (ch > (chis - 1)); // ← исправлено: раньше было >2
+
+            // добавляем последнюю цифру
+            if (ch >= 10)
+            {
+                for (int i = 0; i < values.Length; i++)
+                {
+                    if (ch == values[i])
+                    {
+                        result += values2[i];
+                    }
+                }
+            }
+            else
+            {
+                result += ch.ToString();
+            }
+
+            // Переворот строки
+            string result2 = "";
+            for (int i = result.Length - 1; i >= 0; i--)
+            {
+                result2 += result[i];
+            }
+
+            return result2;
+        }
+    }
+}
