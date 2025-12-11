@@ -1,0 +1,52 @@
+using System;
+
+namespace console_1
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.WriteLine("Число которое нужно перевести:");
+            int num = Convert.ToInt32(Console.ReadLine());
+
+            Console.WriteLine("Выберите систему счисления (2–36):");
+            int chis = Convert.ToInt32(Console.ReadLine());
+
+            switch (chis)
+            {
+                case 2:
+                case 8:
+                case 10:
+                case 16:
+                    string st = Convert.ToString(num, chis);
+                    Console.WriteLine($"Результат ({chis}): " + st);
+                    break;
+
+                default:
+                    string res = Ostalnye(num, chis);
+                    Console.WriteLine($"Результат ({chis}): " + res);
+                    break;
+            }
+
+            Console.ReadLine();
+        }
+
+        static string Ostalnye(int num, int baseN)
+        {
+            const string alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            string result = "";
+
+            int n = num;
+
+            // Перевод в систему baseN
+            while (n > 0)
+            {
+                int remainder = n % baseN;
+                result = alphabet[remainder] + result;
+                n /= baseN;
+            }
+
+            return result;
+        }
+    }
+}
