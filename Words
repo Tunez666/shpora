@@ -67,3 +67,58 @@ class Program
         }
     }
 }
+
+
+
+
+
+using System;
+
+class Program
+{
+    static void Main()
+    {
+        string text = "Мама мыла кассу группа аллея окно программа";
+
+        // Разбиваем текст на слова
+        string[] words = text.Split(new char[] { ' ', ',', '.', '!', '?', ';', ':' },
+                                    StringSplitOptions.RemoveEmptyEntries);
+
+        int totalWords = words.Length;
+        int doubleConsonantWords = 0;
+
+        // Строка с согласными буквами
+        string consonants = "бвгджзйклмнпрстфхцчшщ";
+
+        // Проверяем каждое слово
+        for (int i = 0; i < words.Length; i++)
+        {
+            string word = words[i].ToLower();
+            bool hasDoubleConsonant = false;
+
+            // Проверяем соседние буквы
+            for (int j = 0; j < word.Length - 1; j++)
+            {
+                char c1 = word[j];
+                char c2 = word[j + 1];
+
+                if (c1 == c2 && consonants.Contains(c1))
+                {
+                    hasDoubleConsonant = true;
+                    break;
+                }
+            }
+
+            if (hasDoubleConsonant)
+                doubleConsonantWords++;
+        }
+
+        // Вычисляем процент
+        double percent = (double)doubleConsonantWords / totalWords * 100;
+
+        // Вывод
+        Console.WriteLine("Всего слов: " + totalWords);
+        Console.WriteLine("Слов с удвоенной согласной: " + doubleConsonantWords);
+        Console.WriteLine("Процент: " + percent + "%");
+    }
+}
