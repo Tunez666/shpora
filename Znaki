@@ -1,0 +1,82 @@
+using System;
+
+class Program
+{
+    static int target;
+    static bool found = false;
+
+    static void Main()
+    {
+        Console.Write("Введите число n: ");
+        target = int.Parse(Console.ReadLine());
+
+        int[] digits = { 1,2,3,4,5,6,7,8,9 };
+        char[] ops = new char[8];
+
+        Generate(0, digits, ops);
+
+        if (!found)
+            Console.WriteLine("Невозможно получить это число.");
+    }
+
+    static void Generate(int pos, int[] digits, char[] ops)
+    {
+        if (found) return;
+
+        if (pos == ops.Length)
+        {
+            string expr = BuildExpression(digits, ops);
+            int value = Calculate(expr);
+
+            if (value == target)
+            {
+                Console.WriteLine(expr + " = " + target);
+                found = true;
+            }
+            return;
+        }
+
+        ops[pos] = '+'; Generate(pos + 1, digits, ops);
+        ops[pos] = '-'; Generate(pos + 1, digits, ops);
+        ops[pos] = ' '; Generate(pos + 1, digits, ops); // склейка
+    }
+
+    static string BuildExpression(int[] digits, char[] ops)
+    {
+        string s = digits[0].ToString();
+
+        for (int i = 0; i < ops.Length; i++)
+        {
+            if (ops[i] != ' ')
+                s += ops[i];
+
+            s += digits[i + 1];
+        }
+
+        return s;
+    }
+
+    static int Calculate(string expr)
+    {
+        int sum = 0;
+        int num = 0;
+        int sign = 1;
+
+        for (int i = 0; i < expr.Length; i++)
+        {
+            if (char.IsDigit(expr[i]))
+            {
+                num = num * 10 + (expr[i] - '0');
+            }
+            else
+            {
+                sum += sign * num;
+                num = 0;
+                sign = expr[i] == '+' ? 1 : -1;
+            }
+        }
+
+        sum += sign * num;
+        return sum;
+    }
+}
