@@ -23,3 +23,89 @@
 Для наглядного представления и дальнейшего использования в проекте были составлены таблицы описаний сущностей, включающие название полей, тип данных, ограничения и краткое описание назначения каждого поля. Это позволило чётко зафиксировать структуру базы данных и использовать её как основу для реализации функционала социальной сети в среде разработки.
 
 В результате выполненной работы получена полноценная модель данных, которая отражает все основные процессы и взаимодействия внутри социальной сети, обеспечивает поддержку медиаконтента и социальных функций, а также готова для дальнейшей интеграции с серверной логикой и пользовательским интерфейсом.
+
+
+-- Примеры данных для социальной сети
+
+USE 22019_social;
+
+-- Таблица users
+INSERT INTO users (name, password, email, number_p, status, bio, ava) VALUES
+('Алексей', 'pass123', 'aleksey@mail.com', 2, 'online', 'Люблю фотографии и путешествия', 'ava1.jpg'),
+('Мария', 'masha456', 'maria@mail.com', 1, 'offline', 'Читаю книги и смотрю фильмы', 'ava2.png'),
+('Иван', 'ivan789', 'ivan@mail.com', 3, 'online', 'Фанат спорта и технологий', 'ava3.jpg'),
+('Ольга', 'olga321', 'olga@mail.com', 0, 'away', 'Люблю готовить и рисовать', 'ava4.png'),
+('Дмитрий', 'dmitry654', 'dmitry@mail.com', 4, 'online', 'Разрабатываю приложения', 'ava5.jpg');
+
+-- Таблица req_statuses
+INSERT INTO req_statuses (title) VALUES
+('pending'),
+('accepted'),
+('rejected'),
+('blocked'),
+('canceled');
+
+-- Таблица posts
+INSERT INTO posts (id_u, main_t, media_one, media_two, media_three) VALUES
+(1, 'Моя первая публикация!', 'photo1.jpg', NULL, NULL),
+(2, 'Смотрите новое видео', 'video1.mp4', NULL, NULL),
+(3, 'Фото с прогулки', 'photo2.jpg', 'photo3.jpg', NULL),
+(4, 'Вкусный рецепт', NULL, NULL, NULL),
+(5, 'Мой новый проект', 'screenshot1.png', 'screenshot2.png', 'diagram1.png');
+
+-- Таблица comments_p
+INSERT INTO comments_p (id_p, id_u, main_t) VALUES
+(1, 2, 'Отличная публикация!'),
+(1, 3, 'Супер!'),
+(2, 1, 'Смотрел, классно!'),
+(3, 5, 'Красивые фотографии'),
+(4, 2, 'Обязательно попробую рецепт');
+
+-- Таблица likes_p
+INSERT INTO likes_p (id_p, main_t) VALUES
+(1, 'like'),
+(1, 'like'),
+(2, 'like'),
+(3, 'like'),
+(5, 'like');
+
+-- Таблица likes_c
+INSERT INTO likes_c (id_c) VALUES
+(1),
+(2),
+(3),
+(4),
+(5);
+
+-- Таблица friends
+INSERT INTO friends (id_friend_one, id_friend_two) VALUES
+(1, 2),
+(1, 3),
+(2, 3),
+(4, 5),
+(3, 5);
+
+-- Таблица friends_requests
+INSERT INTO friends_requests (id_friend_one, id_friend_two, id_s) VALUES
+(2, 4, 1),
+(3, 4, 1),
+(5, 1, 1),
+(4, 2, 2),
+(1, 5, 3);
+
+-- Таблица groups
+INSERT INTO groups (name, creater, bio, ava) VALUES
+('Фотография', 1, 'Группа для любителей фото', 'grp1.png'),
+('Кулинария', 2, 'Рецепты и советы', 'grp2.jpg'),
+('Спорт', 3, 'Общение о тренировках', 'grp3.png'),
+('Программирование', 5, 'Все о коде и проектах', 'grp4.png'),
+('Книги', 4, 'Чтение и обсуждения', 'grp5.jpg');
+
+-- Таблица members_groups
+INSERT INTO members_groups (id_m, id_g) VALUES
+(1, 1),
+(2, 1),
+(3, 3),
+(4, 2),
+(5, 4);
+
