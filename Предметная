@@ -101,6 +101,8 @@ INSERT INTO groups (name, creater, bio, ava) VALUES
 ('Программирование', 5, 'Все о коде и проектах', 'grp4.png'),
 ('Книги', 4, 'Чтение и обсуждения', 'grp5.jpg');
 
+
+
 -- Таблица members_groups
 INSERT INTO members_groups (id_m, id_g) VALUES
 (1, 1),
@@ -109,3 +111,109 @@ INSERT INTO members_groups (id_m, id_g) VALUES
 (4, 2),
 (5, 4);
 
+У меня получилась такая бд. Подстрой пол нее пожалуйста: -- Создание базы данных
+CREATE DATABASE IF NOT EXISTS 22019_social;
+USE 22019_social;
+
+-- Таблица пользователей
+CREATE TABLE users (
+    id_u INT(11) NOT NULL AUTO_INCREMENT,
+    name VARCHAR(45) NOT NULL,
+    password VARCHAR(45) NOT NULL,
+    email VARCHAR(45) NOT NULL,
+    number_p INT(11) DEFAULT 0,
+    status TEXT,
+    bio TEXT,
+    ava VARCHAR(255),
+    PRIMARY KEY (id_u)
+);
+
+-- Таблица статусов запросов
+CREATE TABLE req_statuses (
+    id_r INT(11) NOT NULL AUTO_INCREMENT,
+    title VARCHAR(45) NOT NULL,
+    PRIMARY KEY (id_r)
+);
+
+-- Таблица постов
+CREATE TABLE posts (
+    id_p INT(11) NOT NULL AUTO_INCREMENT,
+    id_u INT(11) NOT NULL,
+    main_t TEXT,
+    media_one VARCHAR(255),
+    media_two VARCHAR(255),
+    media_three VARCHAR(255),
+    PRIMARY KEY (id_p),
+    FOREIGN KEY (id_u) REFERENCES users(id_u) ON DELETE CASCADE
+);
+
+-- Таблица комментариев к постам
+CREATE TABLE comments_p (
+    id_c INT(11) NOT NULL AUTO_INCREMENT,
+    id_p INT(11) NOT NULL,
+    id_u INT(11) NOT NULL,
+    main_t TEXT,
+    PRIMARY KEY (id_c),
+    FOREIGN KEY (id_p) REFERENCES posts(id_p) ON DELETE CASCADE,
+    FOREIGN KEY (id_u) REFERENCES users(id_u) ON DELETE CASCADE
+);
+
+-- Таблица лайков постов
+CREATE TABLE likes_p (
+    id_l INT(11) NOT NULL AUTO_INCREMENT,
+    id_p INT(11) NOT NULL,
+    main_t TEXT,
+    PRIMARY KEY (id_l),
+    FOREIGN KEY (id_p) REFERENCES posts(id_p) ON DELETE CASCADE
+);
+
+-- Таблица лайков комментариев
+CREATE TABLE likes_c (
+    id_lc INT(11) NOT NULL AUTO_INCREMENT,
+    id_c INT(11) NOT NULL,
+    PRIMARY KEY (id_lc),
+    FOREIGN KEY (id_c) REFERENCES comments_p(id_c) ON DELETE CASCADE
+);
+
+-- Таблица друзей
+CREATE TABLE friends (
+    id_f INT(11) NOT NULL AUTO_INCREMENT,
+    id_friend_one INT(11) NOT NULL,
+    id_friend_two INT(11) NOT NULL,
+    PRIMARY KEY (id_f),
+    FOREIGN KEY (id_friend_one) REFERENCES users(id_u) ON DELETE CASCADE,
+    FOREIGN KEY (id_friend_two) REFERENCES users(id_u) ON DELETE CASCADE
+);
+
+-- Таблица запросов в друзья
+CREATE TABLE friends_requests (
+    id_f_r INT(11) NOT NULL AUTO_INCREMENT,
+    id_friend_one INT(11) NOT NULL,
+    id_friend_two INT(11) NOT NULL,
+    id_s INT(11) NOT NULL,
+    PRIMARY KEY (id_f_r),
+    FOREIGN KEY (id_friend_one) REFERENCES users(id_u) ON DELETE CASCADE,
+    FOREIGN KEY (id_friend_two) REFERENCES users(id_u) ON DELETE CASCADE,
+    FOREIGN KEY (id_s) REFERENCES req_statuses(id_r) ON DELETE CASCADE
+);
+
+-- Таблица групп
+CREATE TABLE groups (
+    id_g INT(11) NOT NULL AUTO_INCREMENT,
+    name VARCHAR(45) NOT NULL,
+    creater INT(11) NOT NULL,
+    bio TEXT,
+    ava VARCHAR(45),
+    PRIMARY KEY (id_g),
+    FOREIGN KEY (creater) REFERENCES users(id_u) ON DELETE CASCADE
+);
+
+-- Таблица участников групп
+CREATE TABLE members_groups (
+    id_mg INT(11) NOT NULL AUTO_INCREMENT,
+    id_m INT(11) NOT NULL,
+    id_g INT(11) NOT NULL,
+    PRIMARY KEY (id_mg),
+    FOREIGN KEY (id_m) REFERENCES users(id_u) ON DELETE CASCADE,
+    FOREIGN KEY (id_g) REFERENCES groups(id_g) ON DELETE CASCADE
+);
