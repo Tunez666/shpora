@@ -255,3 +255,152 @@ CREATE TABLE members_groups (
 *Пример: «Топ-5 клиентов по сумме заказов за последний квартал с указанием доли их заказов от общего объёма».*
 Задача 4.2 — Самостоятельное формулирование запроса
 На основе вашей схемы БД самостоятельно сформулируйте и выполните нетривиальный запрос, который даёт ответ на гипотетический бизнес-вопрос (например, «В какие дни недели происходит наибольшее количество отмен заказов?»).
+
+
+-- =============================================
+-- SQL-запросы для анализа БД социальной сети
+-- =============================================
+
+USE 22019_social;
+
+-- ЧАСТЬ 1
+-- Задача 1.5 — GROUP BY + агрегатные функции
+SELECT 
+    id_u,
+    COUNT(*) AS posts_count,
+    MAX(id_p) AS max_post_id
+FROM posts
+GROUP BY id_u;
+
+-- =============================================
+-- ЧАСТЬ 2
+
+-- Задача 2.1 — INNER JOIN двух таблиц
+SELECT 
+    u.name,
+    p.main_t
+FROM posts p
+INNER JOIN users u ON p.id_u = u.id_u;
+
+-- Задача 2.2 — LEFT JOIN с NULL
+SELECT 
+    u.name,
+    p.main_t
+FROM users u
+LEFT JOIN posts p ON u.id_u = p.id_u;
+
+-- Задача 2.3 — Подзапрос в WHERE
+SELECT *
+FROM posts
+WHERE id_u IN (
+    SELECT id_u
+    FROM users
+    WHERE number_p > (
+        SELECT AVG(number_p) FROM users
+    )
+);
+
+-- Задача 2.4 — IN и BETWEEN
+SELECT *
+FROM comments_p
+WHERE id_p BETWEEN 1 AND 3;
+
+SELECT *
+FROM posts
+WHERE id_u IN (
+    SELECT id_u
+    FROM users
+    WHERE status = 'online'
+);
+
+-- Задача 2.5 — CASE в SELECT
+SELECT 
+    name,
+    number_p,
+    CASE
+        WHEN number_p = 0 THEN 'Неактивный'
+        WHEN number_p BETWEEN 1 AND 2 THEN 'Среднеактивный'
+        ELSE 'Активный'
+    END AS activity_level
+FROM users;
+
+-- =============================================
+-- ЧАСТЬ 3
+
+-- Задача 3.1 — Многотабличный JOIN с агрегацией
+SELECT 
+    u.name,
+    COUNT(lp.id_l) AS likes_count
+FROM users u
+JOIN posts p ON u.id_u = p.id_u
+LEFT JOIN likes_p lp ON p.id_p = lp.id_p
+GROUP BY u.name;
+
+-- Задача 3.2 — Подзапрос в FROM
+SELECT 
+    u.name,
+    pc.posts_count
+FROM users u
+JOIN (
+    SELECT id_u, COUNT(*) AS posts_count
+    FROM posts
+    GROUP BY id_u
+) pc ON u.id_u = pc.id_u;
+
+-- Задача 3.3 — WITH (CTE)
+WITH post_stats AS (
+    SELECT id_u, COUNT(*) AS cnt
+    FROM posts
+    GROUP BY id_u
+)
+SELECT u.name, ps.cnt
+FROM post_stats ps
+JOIN users u ON ps.id_u = u.id_u
+WHERE ps.cnt > 2;
+
+-- Задача 3.4 — EXPLAIN плана выполнения
+EXPLAIN
+SELECT 
+    u.name,
+    COUNT(lp.id_l)
+FROM users u
+JOIN posts p ON u.id_u = p.id_u
+LEFT JOIN likes_p lp ON p.id_p = lp.id_p
+GROUP BY u.name;
+
+-- Задача 3.5 — WINDOW-функции
+SELECT 
+    name,
+    number_p,
+    RANK() OVER (ORDER BY number_p DESC) AS rating
+FROM users;
+
+-- =============================================
+-- ЧАСТЬ 4
+
+-- Задача 4.1 — Комплексный аналитический запрос
+WITH likes_stat AS (
+    SELECT 
+        u.id_u,
+        u.name,
+        COUNT(lp.id_l) AS likes_count
+    FROM users u
+    JOIN posts p ON u.id_u = p.id_u
+    LEFT JOIN likes_p lp ON p.id_p = lp.id_p
+    GROUP BY u.id_u, u.name
+)
+SELECT *,
+       RANK() OVER (ORDER BY likes_count DESC) AS place
+FROM likes_stat
+ORDER BY likes_count DESC
+LIMIT 5;
+
+-- Задача 4.2 — Бизнес-запрос
+SELECT 
+    g.name,
+    COUNT(mg.id_m) AS members_count
+FROM groups g
+LEFT JOIN members_groups mg ON g.id_g = mg.id_g
+GROUP BY g.name
+ORDER BY members_count DESC;
+
