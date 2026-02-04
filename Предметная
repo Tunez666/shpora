@@ -479,3 +479,199 @@ ORDER BY members_count DESC;
 Самостоятельно сформулируйте ТЗ для процедуры в предметной области вашей БД и реализуйте её. Пример ТЗ: «Процедура должна архивировать (перемещать в таблицу archive) все записи старше N лет, предварительно рассчитав для каждой записи итоговую сумму по связанным таблицам и записав её в поле total_amount архива».
 
 
+
+
+
+
+
+
+
+USE 22019_social;
+DELIMITER $$
+
+/* ====================
+   ПРОЦЕДУРЫ ДЛЯ 22019_social
+   ==================== */
+
+/* 1.1 Последние 10 постов */
+CREATE PROCEDURE sp_last_10_posts()
+BEGIN
+    SELECT *
+    FROM posts
+    ORDER BY id_p DESC
+    LIMIT 10;
+END$$
+
+/* 1.2 Посты конкретного пользователя */
+CREATE PROCEDURE sp_posts_by_user(IN p_user_id INT)
+BEGIN
+    SELECT *
+    FROM posts
+    WHERE id_u = p_user_id
+    ORDER BY id_p DESC;
+END$$
+
+/* 1.3 Количество постов пользователя */
+CREATE PROCEDURE sp_user_posts_count(IN p_user_id INT, OUT p_count INT)
+BEGIN
+    SELECT COUNT(*)
+    INTO p_count
+    FROM posts
+    WHERE id_u = p_user_id;
+END$$
+
+/* 1.4 Запросы в друзья по статусу */
+CREATE PROCEDURE sp_friend_requests_by_status(IN p_status INT)
+BEGIN
+    SELECT *
+    FROM friends_requests
+    WHERE id_s = p_status;
+END$$
+
+/* 1.5 Локальные переменные */
+CREATE PROCEDURE sp_users_summary()
+BEGIN
+    DECLARE users_cnt INT;
+    DECLARE posts_cnt INT;
+
+    SELECT COUNT(*) INTO users_cnt FROM users;
+    SELECT COUNT(*) INTO posts_cnt FROM posts;
+
+    SELECT CONCAT('Пользователей: ', users_cnt, ', Постов: ', posts_cnt) AS summary;
+END$$
+
+/* 2.1 Условная логика */
+CREATE PROCEDURE sp_user_activity(IN p_posts INT)
+BEGIN
+    SELECT CASE
+        WHEN p_posts = 0 THEN 'Неактивный'
+        WHEN p_posts BETWEEN 1 AND 2 THEN 'Средняя активность'
+        ELSE 'Активный'
+    END AS activity_level;
+END$$
+
+/* 2.2 Цикл */
+CREATE PROCEDURE sp_even_user_ids(IN p_limit INT)
+BEGIN
+    DECLARE i INT DEFAULT 1;
+    DECLARE result TEXT DEFAULT '';
+
+    WHILE i <= p_limit DO
+        IF i % 2 = 0 THEN
+            SET result = CONCAT(result, i, ' ');
+        END IF;
+        SET i = i + 1;
+    END WHILE;
+
+    SELECT result AS even_ids;
+END$$
+
+/* 2.3 Транзакция */
+CREATE PROCEDURE sp_add_friend(IN p_user1 INT, IN p_user2 INT)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SELECT 'Ошибка, транзакция отменена' AS result;
+    END;
+
+    START TRANSACTION;
+
+    INSERT INTO friends (id_friend_one, id_friend_two)
+    VALUES (p_user1, p_user2);
+
+    COMMIT;
+    SELECT 'Друг добавлен' AS result;
+END$$
+
+/* 2.4 Обработка ошибок */
+CREATE PROCEDURE sp_safe_divide(IN a INT, IN b INT)
+BEGIN
+    IF b = 0 THEN
+        SELECT 'Ошибка: деление на ноль' AS error;
+    ELSE
+        SELECT a / b AS result;
+    END IF;
+END$$
+
+/* 2.5 Процедура вызывает другую */
+CREATE PROCEDURE sp_user_activity_check(IN p_user_id INT)
+BEGIN
+    DECLARE cnt INT;
+
+    CALL sp_user_posts_count(p_user_id, cnt);
+    CALL sp_user_activity(cnt);
+END$$
+
+/* 3.1 Динамический SQL */
+CREATE PROCEDURE sp_dynamic_users_sort(IN p_field VARCHAR(20))
+BEGIN
+    IF p_field NOT IN ('name', 'email') THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Недопустимое поле сортировки';
+    END IF;
+
+    SET @sql = CONCAT('SELECT * FROM users ORDER BY ', p_field);
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+END$$
+
+/* 3.2 Курсор */
+CREATE PROCEDURE sp_update_user_numbers()
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE uid INT;
+
+    DECLARE cur CURSOR FOR SELECT id_u FROM users;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    OPEN cur;
+
+    read_loop: LOOP
+        FETCH cur INTO uid;
+        IF done THEN LEAVE read_loop; END IF;
+
+        UPDATE users SET number_p = (
+            SELECT COUNT(*) FROM posts WHERE id_u = uid
+        ) WHERE id_u = uid;
+    END LOOP;
+
+    CLOSE cur;
+END$$
+
+/* 3.3 Возврат набора данных */
+CREATE PROCEDURE sp_groups_members()
+BEGIN
+    SELECT g.name, COUNT(mg.id_m) AS members_count
+    FROM groups g
+    LEFT JOIN members_groups mg ON g.id_g = mg.id_g
+    GROUP BY g.name;
+END$$
+
+/* 3.4 Бизнес-логика */
+CREATE PROCEDURE sp_accept_friend_request(IN p_request_id INT)
+BEGIN
+    START TRANSACTION;
+
+    INSERT INTO friends (id_friend_one, id_friend_two)
+    SELECT id_friend_one, id_friend_two FROM friends_requests WHERE id_f_r = p_request_id;
+
+    UPDATE friends_requests SET id_s = 2 WHERE id_f_r = p_request_id;
+
+    COMMIT;
+END$$
+
+/* 3.5 CTE */
+CREATE PROCEDURE sp_user_posts_rank()
+BEGIN
+    WITH stats AS (
+        SELECT id_u, COUNT(*) AS cnt FROM posts GROUP BY id_u
+    )
+    SELECT u.name, s.cnt
+    FROM stats s
+    JOIN users u ON u.id_u = s.id_u
+    ORDER BY s.cnt DESC;
+END$$
+
+DELIMITER ;
