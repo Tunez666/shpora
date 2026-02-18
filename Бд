@@ -1,0 +1,222 @@
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS favorites;
+DROP TABLE IF EXISTS order_items;
+DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS book_authors;
+DROP TABLE IF EXISTS books;
+DROP TABLE IF EXISTS authors;
+DROP TABLE IF EXISTS categories;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS roles;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- -------------------------
+-- Таблица ролей
+-- -------------------------
+CREATE TABLE roles (
+    id_r INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- -------------------------
+-- Таблица пользователей
+-- -------------------------
+CREATE TABLE users (
+    id_u INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    id_r INT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_r) REFERENCES roles(id_r)
+);
+
+-- -------------------------
+-- Таблица категорий
+-- -------------------------
+CREATE TABLE categories (
+    id_c INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE
+);
+
+-- -------------------------
+-- Таблица книг
+-- -------------------------
+CREATE TABLE books (
+    id_b INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    price DECIMAL(8,2) NOT NULL,
+    id_c INT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_c) REFERENCES categories(id_c)
+);
+
+-- -------------------------
+-- Таблица авторов
+-- -------------------------
+CREATE TABLE authors (
+    id_a INT AUTO_INCREMENT PRIMARY KEY,
+    full_name VARCHAR(255) NOT NULL
+);
+
+-- -------------------------
+-- Связь книги ↔ авторы
+-- -------------------------
+CREATE TABLE book_authors (
+    id_b INT NOT NULL,
+    id_a INT NOT NULL,
+    PRIMARY KEY (id_b, id_a),
+    FOREIGN KEY (id_b) REFERENCES books(id_b),
+    FOREIGN KEY (id_a) REFERENCES authors(id_a)
+);
+
+-- -------------------------
+-- Таблица заказов
+-- -------------------------
+CREATE TABLE orders (
+    id_o INT AUTO_INCREMENT PRIMARY KEY,
+    id_u INT NOT NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'new',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_u) REFERENCES users(id_u)
+);
+
+-- -------------------------
+-- Состав заказа
+-- -------------------------
+CREATE TABLE order_items (
+    id_o INT NOT NULL,
+    id_b INT NOT NULL,
+    quantity INT NOT NULL,
+    price DECIMAL(8,2) NOT NULL,
+    PRIMARY KEY (id_o, id_b),
+    FOREIGN KEY (id_o) REFERENCES orders(id_o),
+    FOREIGN KEY (id_b) REFERENCES books(id_b)
+);
+
+-- -------------------------
+-- Избранное
+-- -------------------------
+CREATE TABLE favorites (
+    id_u INT NOT NULL,
+    id_b INT NOT NULL,
+    PRIMARY KEY (id_u, id_b),
+    FOREIGN KEY (id_u) REFERENCES users(id_u),
+    FOREIGN KEY (id_b) REFERENCES books(id_b)
+);
+
+-- ============================================================
+--                 ЗАПОЛНЕНИЕ ДАННЫМИ
+-- ============================================================
+
+-- Роли
+INSERT INTO roles (id_r, name) VALUES
+(1, 'admin'),
+(2, 'user');
+
+-- Пользователи
+INSERT INTO users (email, password, id_r, created_at) VALUES
+('admin@book.ru', '$2y$10$hash1', 1, NOW()),
+('ivan@mail.ru', '$2y$10$hash2', 2, NOW()),
+('anna@mail.ru', '$2y$10$hash3', 2, NOW()),
+('petr@mail.ru', '$2y$10$hash4', 2, NOW()),
+('maria@mail.ru', '$2y$10$hash5', 2, NOW()),
+('alex@mail.ru', '$2y$10$hash6', 2, NOW()),
+('olga@mail.ru', '$2y$10$hash7', 2, NOW()),
+('dmitry@mail.ru', '$2y$10$hash8', 2, NOW()),
+('kate@mail.ru', '$2y$10$hash9', 2, NOW()),
+('sergey@mail.ru', '$2y$10$hash10', 2, NOW());
+
+-- Категории
+INSERT INTO categories (name) VALUES
+('Фантастика'),
+('Детектив'),
+('Классика'),
+('Роман'),
+('Научная литература'),
+('История'),
+('Психология'),
+('Фэнтези'),
+('Биография'),
+('Поэзия');
+
+-- Авторы
+INSERT INTO authors (full_name) VALUES
+('Александр Пушкин'),
+('Фёдор Достоевский'),
+('Лев Толстой'),
+('Джордж Оруэлл'),
+('Джоан Роулинг'),
+('Стивен Кинг'),
+('Агата Кристи'),
+('Рэй Брэдбери'),
+('Эрих Мария Ремарк'),
+('Михаил Булгаков');
+
+-- Книги
+INSERT INTO books (title, description, price, id_c, created_at) VALUES
+('1984', 'Антиутопический роман', 550.00, 1, NOW()),
+('Гарри Поттер', 'Фэнтези роман', 700.00, 8, NOW()),
+('Мастер и Маргарита', 'Классический роман', 600.00, 3, NOW()),
+('Преступление и наказание', 'Психологический роман', 500.00, 3, NOW()),
+('Анна Каренина', 'Роман о любви', 650.00, 4, NOW()),
+('Оно', 'Роман ужасов', 750.00, 1, NOW()),
+('Убийство в Восточном экспрессе', 'Детективный роман', 480.00, 2, NOW()),
+('451 градус по Фаренгейту', 'Научная фантастика', 520.00, 1, NOW()),
+('Три товарища', 'Роман о дружбе', 530.00, 4, NOW()),
+('Евгений Онегин', 'Поэтический роман', 400.00, 10, NOW());
+
+-- Связь книги ↔ авторы
+INSERT INTO book_authors (id_b, id_a) VALUES
+(1, 4),
+(2, 5),
+(3, 10),
+(4, 2),
+(5, 3),
+(6, 6),
+(7, 7),
+(8, 8),
+(9, 9),
+(10, 1);
+
+-- Заказы
+INSERT INTO orders (id_u, status, created_at) VALUES
+(2, 'new', NOW()),
+(3, 'paid', NOW()),
+(4, 'completed', NOW()),
+(5, 'new', NOW()),
+(6, 'paid', NOW()),
+(7, 'completed', NOW()),
+(8, 'new', NOW()),
+(9, 'paid', NOW()),
+(10, 'completed', NOW()),
+(2, 'new', NOW());
+
+-- Состав заказов
+INSERT INTO order_items (id_o, id_b, quantity, price) VALUES
+(1, 1, 1, 550.00),
+(2, 2, 1, 700.00),
+(3, 3, 2, 600.00),
+(4, 4, 1, 500.00),
+(5, 5, 1, 650.00),
+(6, 6, 1, 750.00),
+(7, 7, 3, 480.00),
+(8, 8, 1, 520.00),
+(9, 9, 2, 530.00),
+(10, 10, 1, 400.00);
+
+-- Избранное
+INSERT INTO favorites (id_u, id_b) VALUES
+(2, 1),
+(2, 2),
+(3, 3),
+(4, 4),
+(5, 5),
+(6, 6),
+(7, 7),
+(8, 8),
+(9, 9),
+(10, 10);
+
