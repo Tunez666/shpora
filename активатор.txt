@@ -1,1 +1,3 @@
 irm https://(Удалить со скобками)get.activated.win | iex
+
+https://subscription.kotvpn.net/ecBm6FFFQ4t0DzVK
